@@ -81,37 +81,23 @@ st.title("🎬 CinemaBrain")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Quick prompt suggestion
-prompt = None
-if len(st.session_state.messages) == 0:
-    st.write("💡 **Coba tanyakan contoh ini:**")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("🦇 Sinopsis Batman Begins"):
-            prompt = "Berikan sinopsis film Batman Begins"
-    with col2:
-        if st.button("🚀 Film Sci-Fi Rating Tertinggi"):
-            prompt = "Rekomendasikan film Sci-Fi dengan rating tertinggi"
-    with col3:
-        if st.button("🎭 Rekomendasi Film Drama"):
-            prompt = "Berikan rekomendasi film drama terbaik"
-
-# Tampilkan history obrolan
+# Tampilkan history obrolan terlebih dahulu
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Form input pengguna
-if prompt := st.chat_input("Tanyakan rekomendasi film, sinopsis, atau genre..."):
+# Fungsi pembantu untuk mengeksekusi pesan dan agen
+def handle_query(query_text):
     messages_history = st.session_state.get("messages", [])[-6:]
     history = "\n".join([f'{msg["role"]}: {msg["content"]}' for msg in messages_history]) or "None"
 
     with st.chat_message("user"):
-        st.markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
+        st.markdown(query_text)
+    st.session_state.messages.append({"role": "user", "content": query_text})
 
     with st.chat_message("assistant"):
-        response = chat_imdb(prompt, history)
+        with st.spinner("CinemaBrain sedang mencari dan berpikir..."):
+            response = chat_imdb(query_text, history)
         st.markdown(response["answer"])
         st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
 
@@ -123,3 +109,24 @@ if prompt := st.chat_input("Tanyakan rekomendasi film, sinopsis, atau genre...")
 
     with st.expander("**Usage Details:**"):
         st.code(f'Input Tokens  : {response["total_input_tokens"]}\nOutput Tokens : {response["total_output_tokens"]}')
+
+    st.rerun()
+
+# Quick prompt suggestion (hanya muncul jika percakapan masih kosong)
+if len(st.session_state.messages) == 0:
+    st.write("💡 **Coba tanyakan contoh ini:**")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("🦇 Sinopsis Batman Begins", key="btn_batman"):
+            handle_query("Berikan sinopsis film Batman Begins")
+    with col2:
+        if st.button("🚀 Film Sci-Fi Rating Tertinggi", key="btn_scifi"):
+            handle_query("Rekomendasikan film Sci-Fi dengan rating tertinggi")
+    with col3:
+        if st.button("🎭 Rekomendasi Film Drama", key="btn_drama"):
+            handle_query("Berikan rekomendasi film drama terbaik")
+
+# Form input manual pengguna di bagian paling bawah
+user_text = st.chat_input("Tanyakan rekomendasi film, sinopsis, atau genre...")
+if user_text:
+    handle_query(user_text)
