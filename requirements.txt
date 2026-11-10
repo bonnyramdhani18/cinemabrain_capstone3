@@ -1,0 +1,9 @@
+streamlit
+langchain
+langchain-community
+langchain-openai
+langchain-huggingface
+langchain-qdrant
+qdrant-client
+langgraph
+sentence-transformers
