@@ -81,34 +81,44 @@ st.title("🎬 CinemaBrain")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Tampilkan history obrolan terlebih dahulu
+# Tampilkan history obrolan beserta expander-nya
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        
+        # Jika pesan dari assistant dan punya metadata, tampilkan expander
+        if message["role"] == "assistant" and "metadata" in message:
+            meta = message["metadata"]
+            with st.expander("**Tool Calls (RAG Document Retrieval):**"):
+                st.code(meta["tool_messages"])
+            with st.expander("**History Chat:**"):
+                st.code(meta["history"])
+            with st.expander("**Usage Details:**"):
+                st.code(f'Input Tokens  : {meta["total_input_tokens"]}\nOutput Tokens : {meta["total_output_tokens"]}')
 
-# Fungsi pembantu untuk mengeksekusi pesan dan agen
+# Fungsi eksekusi query
 def handle_query(query_text):
     messages_history = st.session_state.get("messages", [])[-6:]
     history = "\n".join([f'{msg["role"]}: {msg["content"]}' for msg in messages_history]) or "None"
 
-    with st.chat_message("user"):
-        st.markdown(query_text)
+    # Simpan pesan user
     st.session_state.messages.append({"role": "user", "content": query_text})
 
-    with st.chat_message("assistant"):
-        with st.spinner("CinemaBrain sedang mencari dan berpikir..."):
-            response = chat_imdb(query_text, history)
-        st.markdown(response["answer"])
-        st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
+    # Panggil agent
+    with st.spinner("CinemaBrain sedang mencari dan berpikir..."):
+        response = chat_imdb(query_text, history)
 
-    with st.expander("**Tool Calls (RAG Document Retrieval):**"):
-        st.code(response["tool_messages"])
-
-    with st.expander("**History Chat:**"):
-        st.code(history)
-
-    with st.expander("**Usage Details:**"):
-        st.code(f'Input Tokens  : {response["total_input_tokens"]}\nOutput Tokens : {response["total_output_tokens"]}')
+    # Simpan pesan assistant BESERTA metadatanya
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": response["answer"],
+        "metadata": {
+            "tool_messages": response["tool_messages"],
+            "history": history,
+            "total_input_tokens": response["total_input_tokens"],
+            "total_output_tokens": response["total_output_tokens"]
+        }
+    })
 
     st.rerun()
 
