@@ -3,6 +3,7 @@
 Aplikasi rekomendasi film IMDb berbasis Agentic RAG menggunakan LangGraph, Qdrant Vector Database, dan Streamlit.
 
 ## Live Demo
+Link Video https://drive.google.com/file/d/1M_Rl3dFkg-pRams4RyIPakNyQBj8xG0R/view?usp=sharing
 Link Streamlit Cloud(https://cinemabrain.streamlit.app)
 
 ## Fitur Utama
